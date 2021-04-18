@@ -30,7 +30,7 @@ static REDIS_JSON_TYPE: RedisType = RedisType::new(
 
         rdb_load: Some(redisjson::type_methods::rdb_load),
         rdb_save: Some(redisjson::type_methods::rdb_save),
-        aof_rewrite: None, // TODO add support
+        aof_rewrite: Some(redisjson::type_methods::aof_rewrite),
         free: Some(redisjson::type_methods::free),
 
         // Currently unused by Redis

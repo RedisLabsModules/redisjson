@@ -414,6 +414,8 @@ impl RedisJSON {
 
 pub mod type_methods {
     use super::*;
+    use redis_module::RedisString;
+    use std::os::raw::c_char;
 
     #[allow(non_snake_case, unused)]
     pub extern "C" fn rdb_load(rdb: *mut raw::RedisModuleIO, encver: c_int) -> *mut c_void {
@@ -442,5 +444,42 @@ pub mod type_methods {
     pub unsafe extern "C" fn rdb_save(rdb: *mut raw::RedisModuleIO, value: *mut c_void) {
         let json = &*(value as *mut RedisJSON);
         raw::save_string(rdb, &json.data.to_string());
+    }
+
+    pub unsafe extern "C" fn aof_rewrite(
+        aof: *mut raw::RedisModuleIO,
+        key: *mut raw::RedisModuleString,
+        value: *mut c_void,
+    ) {
+        let json = &*(value as *const RedisJSON);
+        let doc_str = json.data.to_string();
+        let key = RedisString::from_ptr(key).unwrap(); // FIXME: Why does it crash when I use key directly and pass "s" to the fmt string??
+        if let Some(value_index) = &json.value_index {
+            let index_name = &value_index.index_name;
+            raw::RedisModule_EmitAOF.unwrap()(
+                aof,
+                b"JSON.SET\0".as_ptr() as *const c_char,
+                b"bcbcb\0".as_ptr() as *const c_char,
+                key.as_ptr(),
+                key.len(),
+                b"$\0",
+                doc_str.as_ptr(),
+                doc_str.len(),
+                b"INDEX\0",
+                index_name.as_ptr(),
+                index_name.len(),
+            );
+        } else {
+            raw::RedisModule_EmitAOF.unwrap()(
+                aof,
+                b"JSON.SET\0".as_ptr() as *const c_char,
+                b"bcb\0".as_ptr() as *const c_char,
+                key.as_ptr(),
+                key.len(),
+                b"$\0",
+                doc_str.as_ptr(),
+                doc_str.len(),
+            );
+        }
     }
 }
