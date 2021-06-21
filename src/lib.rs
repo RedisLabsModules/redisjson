@@ -1,7 +1,7 @@
 #[macro_use]
 extern crate redis_module;
 
-use std::{i64, usize};
+use std::{convert::TryInto, i64, usize};
 
 use redis_module::raw::RedisModuleTypeMethods;
 use redis_module::{native_types::RedisType, raw as rawmod, NextArg, NotifyEvent};
@@ -932,6 +932,17 @@ fn json_cache_init(_ctx: &Context, _args: Vec<String>) -> RedisResult {
 
 fn init(ctx: &Context, _args: &Vec<String>) -> rawmod::Status {
     export_shared_api(ctx);
+
+    // Enable RDB short read
+    unsafe {
+        rawmod::RedisModule_SetModuleOptions.unwrap()(
+            ctx.get_raw(),
+            rawmod::REDISMODULE_OPTIONS_HANDLE_IO_ERRORS
+                .try_into()
+                .unwrap(),
+        )
+    };
+
     rawmod::Status::Ok
 }
 
