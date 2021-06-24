@@ -719,6 +719,10 @@ class ReJSONTestCase(BaseReJSONTest):
         self.assertEqual(1512060373.222988, float(res))
         # self.assertEqual('1512060373.222988', res)
 
+    def testDebugMemory(self):
+        self.cmd('JSON.SET', 'memoryTest', '.', '{"key1":"val", "key2":[1,2,3], "key3":{"key4":1,"key5":false}}')
+        res = self.cmd('JSON.DEBUG', 'MEMORY', 'memoryTest')
+        self.assertEqual(439.0, float(res))
 
 class CacheTestCase(BaseReJSONTest):
     @property

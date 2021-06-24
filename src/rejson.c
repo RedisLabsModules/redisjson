@@ -1917,7 +1917,7 @@ int Module_CreateCommands(RedisModuleCtx *ctx) {
         return REDISMODULE_ERR;
 
     if (RedisModule_CreateCommand(ctx, "json.debug", JSONDebug_RedisCommand, "readonly getkeys-api",
-                                  1, 1, 1) == REDISMODULE_ERR)
+                                  2, 2, 1) == REDISMODULE_ERR)
         return REDISMODULE_ERR;
 
     if (RedisModule_CreateCommand(ctx, "json.type", JSONType_RedisCommand, "readonly", 1, 1, 1) ==
