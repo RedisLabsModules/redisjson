@@ -1,0 +1,28 @@
+FROM redis:alpine as builder
+
+ENV LIBDIR /usr/lib/redis/modules
+ENV DEPS "python py-setuptools py-pip wget unzip make g++"
+# Set up a build environment
+RUN set -ex; \
+    deps="$DEPS"; \
+    apk update; \
+    apk add $deps; \
+    pip install rmtest; 
+
+# Build the source
+ADD . /REJSON
+WORKDIR /REJSON
+RUN set -ex;\
+    make clean; \
+    deps="$DEPS"; \
+    make all -j 4;
+    
+# Package the runner
+FROM redis:alpine
+ENV LIBDIR /usr/lib/redis/modules
+WORKDIR /data
+RUN set -ex; \
+    mkdir -p "$LIBDIR";
+COPY --from=builder /REJSON/src/rejson.so  "$LIBDIR"
+
+CMD ["redis-server", "--loadmodule", "/usr/lib/redis/modules/rejson.so"]
